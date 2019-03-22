@@ -1,0 +1,250 @@
+# manasa
+//package com.laddu;    
+
+import java.lang.*;
+import java.util.*;
+import java.io.*;
+import java.nio.file.*;
+import java.nio.charset.StandardCharsets; 
+import java.util.stream.*;
+
+interface laddu {} 
+
+class base implements laddu 
+{
+	public static Scanner sc; 
+	public static Manager mg; 
+	public static int id;
+	
+	public static void main(String[] args)
+	{
+		sc = new Scanner(System.in);
+		//
+		mg = new Manager("em_file";
+		clrscr();  
+		
+			try{
+				println("=");
+				println("Enter login :- ");
+				id = Integer.parseInt(sc.next());
+			}
+			catch(Exception e)
+			{
+				clrscr();
+				println("invalid characters : please enter numercals");
+				id = -1;
+			}
+		while(id == -1);
+			
+		if(mg.findData(id)) // 
+		{
+			clrscr(); 
+			Display.mainmenu(id); //id found display mainmenu
+		}
+		else
+		{
+			println("emp id not found re run the program"); 
+		}
+		Display.bye(); //exit 
+		//System.exit(0);
+	}
+
+	public static void println(String text)  //should be omited after proper functionality of program is achived
+	{
+		if(text == "=")
+		{
+			System.out.println("==================================");
+		}
+		else
+		{
+			System.out.println(text);
+		}
+	}
+	
+	public static void clrscr() //tested working in windows,needs testing in linux
+	{							
+		try 
+		{
+			if (System.getProperty("os.name").contains("Windows")) //is windows os?
+				new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor(); //a small inefficint hack for asthetic reasons
+			else
+				Runtime.getRuntime().exec("clear"); //a small inefficint hack for asthetic reasons
+		}
+		catch (Exception ex) //sometimes fails on non command line based execution software ex:-eclipse
+		{
+			println("=");
+			println("-----------------------------");
+			println("an unexpected error occured please");
+			println("try using windows cmd / linux terminal.");
+			println("if persist's please contact devloper");
+			println("------press ok to exit-------");
+			println("=");
+			sc.next();
+			System.exit(0);
+		}
+	}
+}
+
+class Display extends base implements laddu
+{
+	Display()    {}
+	
+	public static void dispMenu()
+	{
+		println("="); 
+		println("login - " + id);
+		println("=");
+		println("1. view applied");
+		println("2. apply for leave");
+		println("3. cancel leave");
+		println("4. view leave");
+		println("5. exit");
+		println("=");
+		println("input:-");
+	}
+	
+	public static void mainmenu(int id) //mainmenu implementation, change this function for gui implementation 
+	{
+		String input;
+		do{
+			Display.dispMenu();
+			input = sc.next();
+			clrscr();
+			if       (input.equals("1"))
+			{
+				mg.getLeaves();
+			} else if(input.equals("2"))
+			{
+				mg.applyForLeave();
+			} else if(input.equals("3"))
+			{
+				mg.cancelLeave();
+			} else if(input.equals("4"))
+			{
+				mg.viewLeave();
+			} else if(input.equals("5"))
+			{
+				mg.closeAllStreams();
+			}
+			else
+			{
+				println("=");
+				println("please enter any number between 1 ~ 5 ");
+			}
+		}while(!input.equals("5"));
+		 
+	}
+	
+	public static void bye()
+	{
+		println("thank you");
+		System.exit(0);
+	}
+	
+}
+
+class Manager extends base implements laddu
+{
+	File main_file;
+	File temp_file;
+	List<String> all_employes;
+	static String[] temp;
+	int id;
+	
+	Manager(String filename) 
+	{
+		main_file = new File(filename+".txt");
+		
+		if(main_file.exists())
+		{
+			try
+			{
+				temp_file = File.createTempFile(filename,"temp");
+				//Files.copy(main_file.toPath(),temp_file.toPath(),StandardCopyOption.REPLACE_EXISTING);
+				all_employes = Files.readAllLines(main_file.toPath(), StandardCharsets.UTF_8);
+			}
+			catch(IOException e)
+			{
+				println("=");
+				println("en unexpected error occured terminating the program"+e.toString());
+				println("=");
+				closeAllStreams();
+				System.exit(0);
+			}
+		}else{
+			println("file dosen't exists");
+		  //println("enter filename again:-")
+		  //new Manager(sc.next());
+		}
+
+	}
+	
+	boolean findData(int id)
+	{
+		if(id <= 0)
+			return false;
+		else
+		{
+			for(String emp:all_employes)
+			{
+				if(Character.getNumericValue(emp.charAt(0)) == id)
+				{
+					temp = emp.split(" ");
+					this.id = id;
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	void getLeaves()
+	{
+		int i=3;
+		clrscr();
+		println("=");
+		System.out.println("total leaves applied :- " + temp[i++]);
+		for(;i < temp.length;i++)
+		{
+			println("leave id :- " + temp[i]);
+		}
+	}
+	
+	void applyForLeave()
+	{
+		clrscr();
+		if(Integer.parseInt(temp[2]) > 0)
+		{
+			temp[2] = String.valueOf(Integer.parseInt(temp[2]) - 1);
+			temp[3] = String.valueOf(Integer.parseInt(temp[3]) + 1);
+			int last = Integer.parseInt(temp[temp.length-1]);
+			println("leave applied");
+			String[] e = String.valueOf(last+1).split(" ");
+			String[] temp2 = Arrays.copyOf(temp, temp.length + e.length);
+			System.arraycopy(e, 0, temp2, temp.length, e.length);
+			temp = temp2;
+			
+			all_employes.remove(id-1);
+			all_employes.add(id-1,String.join(" ",temp));
+		}else
+		{
+			println("you exhusted your leaves");
+		}
+	}
+	
+	void cancelLeave()
+	{
+		int leaveid;
+		clrscr();
+		println("=");
+		println("enter leave id :- ");
+		try{
+			leaveid = sc.nextInt();
+		}catch(Exception e)
+		{
+			leaveid = -1;
+		}
+		for(int i = 3;i<=temp.length-3;i++)
+		{
+			if(String.valueOf(leaveid).equals(temp[i]))
+			{
